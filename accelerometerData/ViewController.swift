@@ -7,8 +7,9 @@
 //
 import CoreMotion
 import UIKit
+import CoreLocation
 
-class ViewController: UIViewController, UIDocumentPickerDelegate {
+class ViewController: UIViewController, UIDocumentPickerDelegate, CLLocationManagerDelegate {
     @IBOutlet weak var recordButton: UIButton!
     @IBOutlet weak var gyrox: UILabel!
     @IBOutlet weak var gyroy: UILabel!
@@ -16,6 +17,13 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
     @IBOutlet weak var accela: UILabel!
     @IBOutlet weak var accely: UILabel!
     @IBOutlet weak var accelz: UILabel!
+    @IBOutlet weak var latitude: UILabel!
+    @IBOutlet weak var longitude: UILabel!
+    @IBOutlet weak var speed: UILabel!
+    var locationManager = CLLocationManager()
+    var latData: String = ""
+    var lonData: String = ""
+    var speedData: String = ""
     
     var isRecording = false
     var motion = CMMotionManager()
@@ -111,6 +119,51 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
         MyGyro()
         MyAccel()
         MyGravity()
+        setupLocationManager()
+    }
+    
+    func setupLocationManager() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        locationManager.requestWhenInUseAuthorization()
+    }
+    // Check Location access
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            if CLLocationManager.locationServicesEnabled() {
+                locationManager.startUpdatingLocation()
+            }
+        case .notDetermined, .restricted, .denied:
+            //TODO: add pop up when location is not available
+            break
+        @unknown default:
+            break
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        if status == .authorizedWhenInUse || status == .authorizedAlways {
+            if CLLocationManager.locationServicesEnabled() {
+                locationManager.startUpdatingLocation()
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            DispatchQueue.main.async {
+                self.latitude.text = String(format: "%.4f", location.coordinate.latitude)
+                self.longitude.text = String(format: "%.4f", location.coordinate.longitude)
+                self.speed.text = String(format: "%.2f", location.speed)
+            }
+
+            latData = "Lat: \(String(format: "%.4f", location.coordinate.latitude))"
+            lonData = "Lon: \(String(format: "%.4f", location.coordinate.longitude))"
+            speedData = "Speed: \(String(format: "%.2f", location.speed))"
+
+            writeToCsv()
+        }
     }
     
     func MyGyro() {
@@ -201,7 +254,8 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
             let cast = [
                 time, gyroxData, gyroyData, gyrozData,
                 accelaData, accelyData, accelzData,
-                gravxData, gravyData, gravzData
+                gravxData, gravyData, gravzData,
+                latData, lonData, speedData // new data with location and stuff
             ]
             let csvRow = cast.joined(separator: ",") + "\n"
             //without time
