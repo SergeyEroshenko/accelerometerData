@@ -68,7 +68,7 @@ class ViewController: UIViewController, UIDocumentPickerDelegate, CLLocationMana
             
             fileName = "\(validFileName).csv"
             
-            let csvHeader = "ts,gyrox,gyroy,gyroz,accelx,accely,accelz,gravx,gravy,gravz,lan,lot,speed\n"
+            let csvHeader = "ts,gyrox,gyroy,gyroz,accelx,accely,accelz,gravx,gravy,gravz,lat,lon,speed\n"
             //let csvHeader = "Gyro-X,Gyro-Y,Gyro-Z,Accel-X,Accel-Y,Accel-Z\n"
             let filePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(fileName)
             do {
@@ -153,13 +153,13 @@ class ViewController: UIViewController, UIDocumentPickerDelegate, CLLocationMana
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.last {
             DispatchQueue.main.async {
-                self.latitude.text = String(format: "%.6f", location.coordinate.latitude)
-                self.longitude.text = String(format: "%.6f", location.coordinate.longitude)
+                self.latitude.text = String(format: "%.7f", location.coordinate.latitude)
+                self.longitude.text = String(format: "%.7f", location.coordinate.longitude)
                 self.speed.text = String(format: "%.3f", location.speed)
             }
 
-            latData = String(format: "%.6f", location.coordinate.latitude)
-            lonData = String(format: "%.6f", location.coordinate.longitude)
+            latData = String(format: "%.7f", location.coordinate.latitude)
+            lonData = String(format: "%.7f", location.coordinate.longitude)
             speedData = String(format: "%.3f", location.speed)
 
             writeToCsv()
